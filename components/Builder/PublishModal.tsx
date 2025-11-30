@@ -16,7 +16,8 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
   const [activeTab, setActiveTab] = useState<Tab>('web');
   const [step, setStep] = useState<'idle' | 'building' | 'deploying' | 'completed'>('idle');
   const [progress, setProgress] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Use number for browser-side timer ID to avoid NodeJS namespace issues
+  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -25,7 +26,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
             setStep('idle');
             setProgress(0);
             setActiveTab('web');
-            if (intervalRef.current) clearInterval(intervalRef.current);
+            if (intervalRef.current) window.clearInterval(intervalRef.current);
         }, 300);
         return () => clearTimeout(timer);
     }
@@ -38,9 +39,9 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
     let p = 0;
     setProgress(0);
     
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (intervalRef.current) window.clearInterval(intervalRef.current);
 
-    intervalRef.current = setInterval(() => {
+    intervalRef.current = window.setInterval(() => {
       // Non-linear progress simulation
       if (p < 50) {
         p += Math.random() * 5; // Slow start
@@ -52,7 +53,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
 
       if (p >= 100) {
         p = 100;
-        if (intervalRef.current) clearInterval(intervalRef.current);
+        if (intervalRef.current) window.clearInterval(intervalRef.current);
         setStep('completed');
       }
       
@@ -69,6 +70,9 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
       if (isOpen && activeTab === 'web' && step === 'idle') {
           startSimulation();
       }
+      return () => {
+          if (intervalRef.current) window.clearInterval(intervalRef.current);
+      };
       // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -80,7 +84,6 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
 
   const handleDownloadApk = () => {
       // Simulation: Create a dummy APK file (text content masked as APK)
-      // In a real environment, this would be a binary blob from the build server.
       const mockContent = `This is a simulation of the APK file for ${projectName}.\n\nSource Code included for debugging:\n\n${code}`;
       const blob = new Blob([mockContent], { type: 'application/vnd.android.package-archive' });
       const url = URL.createObjectURL(blob);
@@ -117,7 +120,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({ isOpen, onClose, pro
   const resetBuild = () => {
       setStep('idle');
       setProgress(0);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
   }
 
   if (!isOpen) return null;

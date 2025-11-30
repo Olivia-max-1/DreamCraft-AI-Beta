@@ -8,8 +8,13 @@ const STORAGE_KEYS = {
 // --- Auth ---
 
 export const getCurrentUser = (): User | null => {
-  const userStr = localStorage.getItem(STORAGE_KEYS.USER);
-  return userStr ? JSON.parse(userStr) : null;
+  try {
+    const userStr = localStorage.getItem(STORAGE_KEYS.USER);
+    return userStr ? JSON.parse(userStr) : null;
+  } catch (e) {
+    console.error("Failed to get current user", e);
+    return null;
+  }
 };
 
 export const loginUser = (email: string, name: string): User => {
@@ -18,19 +23,32 @@ export const loginUser = (email: string, name: string): User => {
     email, 
     name 
   };
-  localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+  try {
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
+  } catch (e) {
+    console.error("Failed to login user", e);
+  }
   return user;
 };
 
 export const logoutUser = () => {
-  localStorage.removeItem(STORAGE_KEYS.USER);
+  try {
+    localStorage.removeItem(STORAGE_KEYS.USER);
+  } catch (e) {
+    console.error("Failed to logout user", e);
+  }
 };
 
 // --- Projects ---
 
 export const getProjects = (): Project[] => {
-  const projectsStr = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-  return projectsStr ? JSON.parse(projectsStr) : [];
+  try {
+    const projectsStr = localStorage.getItem(STORAGE_KEYS.PROJECTS);
+    return projectsStr ? JSON.parse(projectsStr) : [];
+  } catch (e) {
+    console.error("Failed to get projects", e);
+    return [];
+  }
 };
 
 export const getProject = (id: string): Project | undefined => {
@@ -39,22 +57,30 @@ export const getProject = (id: string): Project | undefined => {
 };
 
 export const saveProject = (project: Project) => {
-  const projects = getProjects();
-  const index = projects.findIndex(p => p.id === project.id);
-  
-  const updatedProject = { ...project, lastModified: Date.now() };
+  try {
+    const projects = getProjects();
+    const index = projects.findIndex(p => p.id === project.id);
+    
+    const updatedProject = { ...project, lastModified: Date.now() };
 
-  if (index >= 0) {
-    projects[index] = updatedProject;
-  } else {
-    projects.push(updatedProject);
+    if (index >= 0) {
+      projects[index] = updatedProject;
+    } else {
+      projects.push(updatedProject);
+    }
+    
+    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
+  } catch (e) {
+    console.error("Failed to save project", e);
   }
-  
-  localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
 };
 
 export const deleteProject = (id: string) => {
-  const projects = getProjects();
-  const filteredProjects = projects.filter(p => p.id !== id);
-  localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filteredProjects));
+  try {
+    const projects = getProjects();
+    const filteredProjects = projects.filter(p => p.id !== id);
+    localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(filteredProjects));
+  } catch (e) {
+    console.error("Failed to delete project", e);
+  }
 };

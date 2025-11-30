@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChatPanel } from './Builder/ChatPanel';
 import { PreviewPanel } from './Builder/PreviewPanel';
 import { CodePanel } from './Builder/CodePanel';
@@ -28,6 +28,12 @@ export const Builder: React.FC<BuilderProps> = ({ project, initialPrompt, onBack
     projectName: project.name,
   });
 
+  // Ref to track latest state for unmount saving
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   const [activeModal, setActiveModal] = useState<'none' | 'publish' | 'share'>('none');
   const [lastSaved, setLastSaved] = useState<number>(Date.now());
   const [isSaving, setIsSaving] = useState(false);
@@ -49,6 +55,19 @@ export const Builder: React.FC<BuilderProps> = ({ project, initialPrompt, onBack
 
     return () => clearTimeout(timer);
   }, [state.code, state.history, state.projectName, project.id]);
+
+  // Save on unmount / back navigation
+  useEffect(() => {
+    return () => {
+        saveProject({
+            id: project.id,
+            name: stateRef.current.projectName,
+            code: stateRef.current.code,
+            history: stateRef.current.history,
+            lastModified: Date.now()
+        });
+    };
+  }, [project.id]);
 
   // Handle initial prompt from dashboard for new projects
   useEffect(() => {
