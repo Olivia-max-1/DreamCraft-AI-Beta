@@ -1,0 +1,7 @@
+{
+  "name": "DreamCraft AI",
+  "description": "An advanced AI-powered app creation platform. Describe your idea, and watch it come to life with clean code and instant previews.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
